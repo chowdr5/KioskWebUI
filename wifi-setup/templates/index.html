@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WiFi Setup</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 2rem; }
+      .card { max-width: 600px; margin: auto; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; }
+      label { display:block; margin-top: 0.5rem; }
+      input[type=text], input[type=password], select { width:100%; padding:0.5rem; }
+      button { margin-top:1rem; padding:0.5rem 1rem; }
+      .alert { padding:0.5rem; margin-bottom:0.5rem; }
+      table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+      th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #eee; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>WiFi Setup</h2>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form action="/configure" method="post">
+        <label for="ssid">Select SSID</label>
+        <select id="ssid" name="ssid" required>
+          <option value="">-- choose a network --</option>
+          {% for net in networks %}
+            <option value="{{ net.ssid }}">{{ net.ssid }} ({{ net.signal }}%) {{ net.security }}</option>
+          {% endfor %}
+        </select>
+
+        <label for="psk">Password (leave blank for open networks)</label>
+        <input type="password" id="psk" name="psk">
+
+        <button type="submit">Connect</button>
+      </form>
+
+      <p style="margin-top:1rem; font-size:0.9rem; color:#666">Note: NetworkManager is used to manage connections; this UI calls <code>nmcli</code> as sudo to create/apply a profile.</p>
+    </div>
+  </body>
+</html>

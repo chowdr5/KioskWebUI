@@ -1,0 +1,13 @@
+[Unit]
+Description=WiFi Setup Web UI
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/wifi-setup
+ExecStart=/usr/bin/env python3 /home/pi/wifi-setup/app.py
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target
