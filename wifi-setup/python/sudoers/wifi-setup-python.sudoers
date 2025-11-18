@@ -1,0 +1,2 @@
+# Allow 'nwadmin' to run nmcli and ip without password for this app
+nwadmin ALL=(ALL) NOPASSWD: /usr/bin/nmcli, /usr/bin/ip

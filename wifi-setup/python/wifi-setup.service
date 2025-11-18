@@ -1,0 +1,13 @@
+[Unit]
+Description=WiFi Setup Python Web UI
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/nwadmin/wifi-setup/python
+ExecStart=/usr/bin/env python3 /home/nwadmin/wifi-setup/python/app.py
+Restart=on-failure
+User=nwadmin
+
+[Install]
+WantedBy=multi-user.target

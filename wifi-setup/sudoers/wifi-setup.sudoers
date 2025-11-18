@@ -1,4 +1,0 @@
-# Allow the 'wifi-setup' user (or change to desired username) to run specific nmcli and systemctl commands without a password
-# Replace 'wifi-setup' with the user you intend to run the Flask app as (e.g., 'pi')
-
-nwadmin ALL=(ALL) NOPASSWD: /usr/bin/nmcli, /bin/systemctl, /usr/bin/wpa_cli

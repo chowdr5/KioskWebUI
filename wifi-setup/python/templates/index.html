@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>WiFi Setup</title>
+  <style>body{font-family:Arial;margin:1rem}label,input,select,button{display:block;margin:0.5rem 0}.msg{padding:0.5rem;margin-bottom:0.5rem;border-radius:4px}.success{background:#e6ffed}.danger{background:#ffe6e6}</style>
+</head>
+<body>
+<h3>WiFi Setup</h3>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for cat,msg in messages %}
+      <div class="msg {{cat}}">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div id="networks">
+  <form action="/connect" method="post">
+    <label for="ssid">Select SSID</label>
+    <select id="ssid" name="ssid">
+      <option value="">-- choose --</option>
+      {% for n in networks %}
+        <option value="{{ n.ssid }}">{{ n.ssid }} ({{ n.signal }}%) {{ n.security }}</option>
+      {% endfor %}
+    </select>
+    <label for="psk">Password</label>
+    <input id="psk" name="psk" type="password">
+    <button type="submit">Connect</button>
+  </form>
+</div>
+
+<hr>
+<h4>Start AP (hotspot)</h4>
+<form action="/hotspot" method="post">
+  <label for="hot_ssid">Hotspot SSID</label>
+  <input id="hot_ssid" name="hot_ssid">
+  <label for="hot_psk">Password (optional)</label>
+  <input id="hot_psk" name="hot_psk" type="password">
+  <button type="submit">Start Hotspot</button>
+</form>
+
+</body>
+</html>
