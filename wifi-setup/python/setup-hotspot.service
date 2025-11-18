@@ -1,0 +1,16 @@
+[Unit]
+Description=Setup Hotspot for initial configuration
+After=network.target
+
+[Service]
+Type=oneshot
+# Run as root because nmcli will create connections and set IPs
+User=root
+ExecStart=/opt/webUI/wifi-setup/python/hotspot.sh start
+# The following would be a conditional to only create the AP when no known networks are available.
+# It's commented out for testing so the hotspot always starts at boot; uncomment logic to enable behavior:
+# ExecStartPre=/bin/bash -c 'if nmcli -t -f ACTIVE,SSID dev wifi | grep -q "^yes:"; then exit 1; fi'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
