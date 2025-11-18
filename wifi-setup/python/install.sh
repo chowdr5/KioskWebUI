@@ -12,7 +12,7 @@ if ! id -u nwadmin >/dev/null 2>&1; then
 fi
 
 # Create venv and install requirements
-cd python
+#cd python
 python3 -m venv venv
 . venv/bin/activate
 # Ensure pip/setuptools/wheel are recent so modern packages can be installed
