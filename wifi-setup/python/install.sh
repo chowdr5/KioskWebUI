@@ -25,7 +25,8 @@ mkdir -p /etc/sudoers.d
 cp sudoers/wifi-setup-python.sudoers /etc/sudoers.d/wifi-setup-python
 chmod 440 /etc/sudoers.d/wifi-setup-python
 
-chown -R nwadmin:nwadmin /home/nwadmin/wifi-setup || true
+# Ensure project is owned by nwadmin
+chown -R nwadmin:nwadmin /opt/webUI/wifi-setup || true
 
 systemctl daemon-reload
 systemctl enable --now wifi-setup.service
