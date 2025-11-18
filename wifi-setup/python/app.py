@@ -26,6 +26,29 @@ def scan_networks():
     except Exception:
         return []
 
+
+def _remove_conflicting_connection(ssid: str):
+    """Remove any existing NetworkManager connection whose NAME matches the SSID
+    and is of type 802-11-wireless. This avoids nmcli attempting to reuse a
+    malformed/stale profile that lacks wifi-sec properties (which causes the
+    "key-mgmt property is missing" error).
+    """
+    try:
+        proc = subprocess.run(['nmcli', '-t', '-f', 'NAME,TYPE', 'connection', 'show'], capture_output=True, text=True, check=True)
+        for line in proc.stdout.strip().splitlines():
+            if not line:
+                continue
+            parts = line.split(':', 1)
+            if len(parts) != 2:
+                continue
+            name, ctype = parts[0], parts[1]
+            if ctype == '802-11-wireless' and name == ssid:
+                # delete the existing connection (ignore failures)
+                subprocess.run(['sudo', 'nmcli', 'connection', 'delete', name], check=False)
+    except Exception:
+        # best-effort only; don't prevent UI flow on errors here
+        pass
+
 @app.route('/')
 def index():
     nets = scan_networks()
@@ -39,6 +62,9 @@ def connect():
         flash('SSID required', 'danger')
         return redirect(url_for('index'))
     try:
+        # Remove any existing connection profile with the same SSID so nmcli
+        # will create a fresh connection with the correct security settings.
+        _remove_conflicting_connection(ssid)
         if psk:
             cmd = ['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', psk]
         else:
