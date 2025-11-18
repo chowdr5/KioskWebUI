@@ -15,6 +15,8 @@ fi
 cd python
 python3 -m venv venv
 . venv/bin/activate
+# Ensure pip/setuptools/wheel are recent so modern packages can be installed
+pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 
 # Copy service and sudoers
