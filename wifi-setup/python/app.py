@@ -28,13 +28,13 @@ def scan_networks():
 
 
 def _remove_conflicting_connection(ssid: str):
-    """Remove any existing NetworkManager connection whose NAME matches the SSID
-    and is of type 802-11-wireless. This avoids nmcli attempting to reuse a
-    malformed/stale profile that lacks wifi-sec properties (which causes the
-    "key-mgmt property is missing" error).
+    """Remove any existing NetworkManager connection whose SSID or NAME
+    matches the requested SSID and is a wifi connection. We check both the
+    connection NAME and the configured 802-11-wireless.ssid property to catch
+    stale profiles that would otherwise be reused.
     """
     try:
-        proc = subprocess.run(['nmcli', '-t', '-f', 'NAME,TYPE', 'connection', 'show'], capture_output=True, text=True, check=True)
+        proc = subprocess.run(['sudo', 'nmcli', '-t', '-f', 'NAME,TYPE', 'connection', 'show'], capture_output=True, text=True, check=True)
         for line in proc.stdout.strip().splitlines():
             if not line:
                 continue
@@ -42,8 +42,18 @@ def _remove_conflicting_connection(ssid: str):
             if len(parts) != 2:
                 continue
             name, ctype = parts[0], parts[1]
-            if ctype == '802-11-wireless' and name == ssid:
-                # delete the existing connection (ignore failures)
+            if ctype != '802-11-wireless':
+                continue
+            # Try to read the configured SSID for this connection. If the
+            # property isn't present or the command fails, treat it as empty.
+            try:
+                ssid_proc = subprocess.run(['sudo', 'nmcli', '-g', '802-11-wireless.ssid', 'connection', 'show', name], capture_output=True, text=True, check=True)
+                cfg_ssid = ssid_proc.stdout.strip()
+            except subprocess.CalledProcessError:
+                cfg_ssid = ''
+            # If either the connection name or its configured SSID matches,
+            # delete the profile so nmcli will create a fresh one.
+            if name == ssid or cfg_ssid == ssid:
                 subprocess.run(['sudo', 'nmcli', 'connection', 'delete', name], check=False)
     except Exception:
         # best-effort only; don't prevent UI flow on errors here
@@ -62,15 +72,43 @@ def connect():
         flash('SSID required', 'danger')
         return redirect(url_for('index'))
     try:
-        # Remove any existing connection profile with the same SSID so nmcli
-        # will create a fresh connection with the correct security settings.
+        # Remove any existing connection profile that matches this SSID so
+        # NetworkManager won't try to reuse a stale profile.
         _remove_conflicting_connection(ssid)
-        if psk:
-            cmd = ['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', psk]
-        else:
-            cmd = ['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid]
-        proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        flash('Connection started', 'success')
+
+        # Create a temporary connection name to avoid collisions
+        import time
+        temp_name = f"wifi-setup-{int(time.time())}"
+
+        # First try the higher-level command which both creates a profile and
+        # brings it up in one step. We add a profile name so it doesn't reuse
+        # an existing one.
+        try:
+            if psk:
+                connect_cmd = ['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', psk, 'ifname', 'wlan0', 'con-name', temp_name]
+            else:
+                connect_cmd = ['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'ifname', 'wlan0', 'con-name', temp_name]
+            proc = subprocess.run(connect_cmd, capture_output=True, text=True, check=True)
+            flash('Connection started', 'success')
+        except subprocess.CalledProcessError as e:
+            # If we get the key-mgmt error or similar, fall back to explicitly
+            # creating/modifying a profile and then bringing it up.
+            stderr = (e.stderr or e.stdout or '').lower()
+            if 'key-mgmt' in stderr or '802-11-wireless-security' in stderr:
+                # explicit creation and modification
+                subprocess.run(['sudo', 'nmcli', 'connection', 'add', 'type', 'wifi', 'ifname', 'wlan0', 'con-name', temp_name, 'ssid', ssid], check=False)
+                if psk:
+                    subprocess.run(['sudo', 'nmcli', 'connection', 'modify', temp_name, 'wifi-sec.key-mgmt', 'wpa-psk'], check=False)
+                    subprocess.run(['sudo', 'nmcli', 'connection', 'modify', temp_name, 'wifi-sec.psk', psk], check=False)
+                subprocess.run(['sudo', 'nmcli', 'connection', 'modify', temp_name, 'connection.autoconnect', 'no'], check=False)
+                # try bring up
+                proc2 = subprocess.run(['sudo', 'nmcli', 'connection', 'up', temp_name], capture_output=True, text=True, check=False)
+                if proc2.returncode == 0:
+                    flash('Connection started', 'success')
+                else:
+                    flash(f'Connection failed: {proc2.stderr or proc2.stdout or stderr}', 'danger')
+            else:
+                flash(f'Connection failed: {e.stderr or e.stdout}', 'danger')
     except subprocess.CalledProcessError as e:
         flash(f'Connection failed: {e.stderr or e.stdout}', 'danger')
     return redirect(url_for('index'))

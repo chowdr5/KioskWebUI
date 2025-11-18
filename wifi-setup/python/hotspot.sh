@@ -6,7 +6,7 @@
 set -euo pipefail
 
 CON_NAME="setup-hotspot"
-IFACE="wlan0"
+IFACE="wlanForce"
 SSID="SetupAP"
 PSK="setup1234"
 IPADDR="192.168.50.1/24"
@@ -24,6 +24,9 @@ start_hotspot() {
     echo "Creating connection $CON_NAME"
     nmcli connection add type wifi ifname "$IFACE" con-name "$CON_NAME" autoconnect no ssid "$SSID"
   fi
+
+# nmcli connection add type wifi con-name "$CON_NAME" ifname "$IFACE" wifi.ssid "MySSID"
+wifi-sec.key-mgmt wpa-psk wifi-sec.psk "MyPassword123"
 
   # Configure as AP
   nmcli connection modify "$CON_NAME" 802-11-wireless.mode ap 802-11-wireless.band bg
