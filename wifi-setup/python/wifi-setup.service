@@ -4,8 +4,8 @@ After=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/webUI/wifi-setup/python
-ExecStart=/opt/webUI/wifi-setup/python/venv/bin/python /opt/webUI/wifi-setup/python/app.py
+WorkingDirectory=/opt/webUI/KioskWebUI/wifi-setup/python
+ExecStart=/opt/webUI/KioskWebUI/wifi-setup/python/venv/bin/python /opt/webUI/KioskWebUI/wifi-setup/python/app.py
 Restart=on-failure
 User=nwadmin
 
