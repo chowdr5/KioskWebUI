@@ -7,7 +7,7 @@ Type=simple
 WorkingDirectory=/opt/webUI/KioskWebUI/wifi-setup/python
 ExecStart=/opt/webUI/KioskWebUI/wifi-setup/python/venv/bin/python /opt/webUI/KioskWebUI/wifi-setup/python/app.py
 Restart=on-failure
-User=nwadmin
+User=kiosk
 
 [Install]
 WantedBy=multi-user.target

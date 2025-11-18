@@ -8,10 +8,10 @@ fi
 # Target install directory
 TARGET_DIR="/opt/webUI/KioskWebUI/wifi-setup"
 
-# Create nwadmin user if missing
-if ! id -u nwadmin >/dev/null 2>&1; then
-  useradd -m -s /bin/bash nwadmin
-  echo "Created user nwadmin"
+# Create kiosk user if missing
+if ! id -u kiosk >/dev/null 2>&1; then
+  useradd -m -s /bin/bash kiosk
+  echo "Created user kiosk"
 fi
 
 # Determine script and project root
@@ -59,7 +59,7 @@ cp sudoers/wifi-setup-python.sudoers /etc/sudoers.d/wifi-setup-python
 chmod 440 /etc/sudoers.d/wifi-setup-python
 chmod -R 777 "$TARGET_DIR" 
 # Ensure project is owned by nwadmin
-chown -R nwadmin:nwadmin "$TARGET_DIR" || true
+chown -R kiosk:kiosk "$TARGET_DIR" || true
 chmod -R 777 "$TARGET_DIR" || true
 
 systemctl daemon-reload
